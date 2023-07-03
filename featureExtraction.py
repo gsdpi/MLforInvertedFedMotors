@@ -11,6 +11,7 @@ import numpy as np
 import os
 from utils import get_low_leakage_fft
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
 
 
 class featureExtraction(object):
@@ -31,6 +32,10 @@ class featureExtraction(object):
         if featsDomain=="freq":
             self.M,self.X = self.get_freq_feats()
             self.y = self.M[:,3]
+            # Normalization
+            scaler = MinMaxScaler()
+            self.X = scaler.fit_transform(self.X)
+            
 
         self.X_train,self.X_test,self.y_train,self.y_test,self.M_train,self.M_test = train_test_split(self.X,self.y,self.M,
                                                                                                       test_size=self.testRatio,

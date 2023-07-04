@@ -15,7 +15,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 class featureExtraction(object):
-    def __init__(self, dataID:str,featsDomain: str='freq',statorFreqs:list=[37],testRatio:float=0.2,random_state:int=14)->None:
+    def __init__(self, dataID:str,featsDomain: str='freq',statorFreqs:list=[37],testsID:list=[],testRatio:float=0.2,random_state:int=14,scaler_params:dict={})->None:
         '''
             PARAMS:
                 dataID (str)          String ID of the .h5 file to be processed.
@@ -24,22 +24,38 @@ class featureExtraction(object):
         '''
         self.DATAPATH = os.path.join("./Data",f"{dataID}.h5")
         self.metadata = pd.read_hdf(self.DATAPATH,key="metadatos")
+        self.N        = self.metadata.shape[0]
         self.statorFreqs = statorFreqs
         self.testRatio = testRatio
         with h5py.File(self.DATAPATH, 'r') as hf:
             self.data = hf['datos'][:]
-
+        # Filtering data by the selected tests in testsID
+        if len(testsID)>0:
+            idx_test = np.zeros_like(self.N)
+            for testID in testsID:
+                idx_test = idx_test | (self.metadata.prueba == f"Prueba_{testID}")
+            self.metadata = self.metadata[idx_test]
+            self.data = self.data[idx_test]
+        
         if featsDomain=="freq":
             self.M,self.X = self.get_freq_feats()
             self.y = self.M[:,3]
-            # Normalization
-            scaler = MinMaxScaler()
-            self.X = scaler.fit_transform(self.X)
-            
+        
+        
+        # Normalization
+        #scaler = MinMaxScaler()
+        if scaler_params =={}:
+            self.scaler_params = (self.X.min(axis=0),self.X.max(axis=0))
+        else:
+            self.scaler_params = scaler_params
 
+        self.X = (self.X - self.scaler_params[0])/(self.scaler_params[1]-self.scaler_params[0])
         self.X_train,self.X_test,self.y_train,self.y_test,self.M_train,self.M_test = train_test_split(self.X,self.y,self.M,
                                                                                                       test_size=self.testRatio,
                                                                                                        random_state=random_state)
+
+    def get_scaler_params(self):
+        return self.scaler_params
 
     def get_freq_feats(self):
         M = []
@@ -95,7 +111,8 @@ if __name__ == "__main__":
 
     # Freq test
     dataID = "raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27"
-    data = featureExtraction(dataID,statorFreqs=[37,35])  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
+    data2 = featureExtraction(dataID,statorFreqs=[37,35],testsID=[21])  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
+    data = featureExtraction(dataID,statorFreqs=[37],testsID=[24],scaler_params=data2.scaler_params)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
 
     import matplotlib.pyplot as plt
     plt.ion()
@@ -105,3 +122,6 @@ if __name__ == "__main__":
         plt.plot(data.X[:,feat].T)
     plt.figure('y')
     plt.plot(data.y)
+
+    # Ejemplo de procesamiento con normalización procedente de otro procesamiento previo
+    

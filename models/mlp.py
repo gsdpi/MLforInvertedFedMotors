@@ -4,8 +4,7 @@ layers = tf.keras.layers
 K = tf.keras.backend
 
 class mlp(object):
-    def __init__(self,data, params: dict, **kwargs) -> None:
-        print("soy el modelo mlp")      
+    def __init__(self,data, params: dict, **kwargs) -> None:      
         self.data    = data
         self.X_train = data.X_train
         self.X_test  = data.X_test
@@ -80,11 +79,15 @@ class mlp(object):
             
             
             test_loss, self.test_MSE,self.test_MAE= self.model.evaluate(self.X_test, self.y_test, verbose=2)
-            print(f'Test MSE: {self.test_MSE}    Test MAE: {self.test_MSE}  ')
-    def predict(self):
-        pass
+            print(f'Test MSE: {self.test_MSE}    Test MAE: {self.test_MAE}  ')
+    def predict(self,X):
+        y_est = self.model.predict(X, batch_size=128) 
+        return y_est.squeeze()
 
 
+    @classmethod
+    def type(cls):
+        return "keras"
 
 # Unit testing
 if __name__ == "__main__":

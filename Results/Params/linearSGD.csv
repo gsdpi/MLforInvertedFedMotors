@@ -1,0 +1,2 @@
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'n_iter_no_change': 10, 'max_iter': 300, 'learning_rate': 'adaptive', 'alpha': 0.0001}]",0.9990148316159525

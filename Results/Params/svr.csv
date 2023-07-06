@@ -1,0 +1,2 @@
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'max_iter': 300, 'kernel': 'sigmoid', 'gamma': 0.037000000000000005, 'C': 550}]",0.9980612602870267

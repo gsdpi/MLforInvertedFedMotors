@@ -1,0 +1,2 @@
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'hiddenLayerUnits': [130, 140, 10], 'activation': 'tanh', 'initializer': 'glorot_uniform', 'lr': 0.0014317635468985984, 'beta': 0.8, 'epochs': 300, 'batch_size': 4, 'n_layers': 2}]","[0.5052308440208435, 0.5052308440208435, 0.5109227895736694]"

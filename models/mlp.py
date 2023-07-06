@@ -1,5 +1,5 @@
 import tensorflow as tf
-
+import numpy as np
 layers = tf.keras.layers
 K = tf.keras.backend
 
@@ -12,17 +12,16 @@ class mlp(object):
         self.y_test  = data.y_test
         self.n_feats = data.X_train.shape[-1]
         # Params: units, num. layers, 
-        self.hiddenLayerUnits   = params.get("layers",[10,10])
+        self.hiddenLayerUnits   = params.get("hiddenLayerUnits",[10,10])
         self.activation         = params.get("activation","relu")
         self.initializer        = params.get("initializer","glorot_uniform")
         self.lr                 = params.get("lr",0.001)
         self.beta               = params.get("beta",0.8)
-        self.epochs             = params.get("epochs",200)
+        self.epochs             = params.get("epochs",300)
         self.batch_size         = params.get("batch_size",5)
         self.min_delta          = params.get("min_delta",0.001)
         self.patience           = params.get("pacience",10)
-        
-        self.n_layers = len(self.hiddenLayerUnits)
+        self.n_layers           = params.get("n_layers",len(self.hiddenLayerUnits))
         # List with all keras layers
         self.layers = []
 
@@ -86,8 +85,55 @@ class mlp(object):
 
 
     @classmethod
-    def type(cls):
+    def get_model_type(cls):
         return "keras"
+    
+    @classmethod
+    def get_model_name(cls):
+        return "mlp"
+
+    @classmethod
+    def get_randomSearch_params(cls,hp):
+        param_grid = {'hiddenLayerUnits':[hp.Int("neurons_l1", min_value=10, max_value=200, step=10),
+                                          hp.Int("neurons_l2", min_value=10, max_value=200, step=10),
+                                          hp.Int("neurons_l3", min_value=10, max_value=200, step=10)],
+                     'activation':        hp.Choice("activation", ["relu", "tanh","sigmoid"]),
+                     'initializer':       "glorot_uniform",
+                     'lr' :                hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log"),
+                     'beta' :              0.8,
+                     'epochs':             300,
+                     'batch_size':         hp.Int("batch_size", min_value=4, max_value=32, step=4),
+                     'n_layers':           hp.Choice("n_layers", [1,2,3])
+
+                    }
+        
+        return param_grid
+    
+    @classmethod
+    def get_model_obj(cls,data):
+
+        def build_model(hp):
+            params = cls.get_randomSearch_params(hp)
+            model  = cls(data,params).model
+            return model
+
+        return build_model
+    @classmethod 
+    def get_params_from_hp(cls,best_hp):
+        params = {'hiddenLayerUnits':[best_hp["neurons_l1"],
+                                          best_hp["neurons_l2"],
+                                          best_hp["neurons_l3"]],
+                       'activation':      best_hp["activation"],
+                        'initializer':    "glorot_uniform",
+                        'lr' :            best_hp["lr"],
+                        'beta' :          0.8,
+                        'epochs':         300,
+                        'batch_size':     best_hp["batch_size"],
+                        'n_layers':       best_hp["n_layers"]
+                    }
+
+        return params
+    
 
 # Unit testing
 if __name__ == "__main__":

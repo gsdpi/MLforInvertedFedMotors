@@ -22,6 +22,7 @@ class featureExtraction(object):
                 featsDomain (str)     Time or frequency feats  ['time','freq']
                 statorFreqs (list)    Stator frequencies [34,36,37,...]
         '''
+        self.dataID   = dataID
         self.DATAPATH = os.path.join("./Data",f"{dataID}.h5")
         self.metadata = pd.read_hdf(self.DATAPATH,key="metadatos")
         self.N        = self.metadata.shape[0]
@@ -112,7 +113,7 @@ if __name__ == "__main__":
     # Freq test
     dataID = "raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27"
     data2 = featureExtraction(dataID,statorFreqs=[37,35],testsID=[21])  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
-    data = featureExtraction(dataID,statorFreqs=[37],testsID=[24],scaler_params=data2.scaler_params)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
+    data = featureExtraction(dataID,statorFreqs=[37],testsID=[24,27])  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
 
     import matplotlib.pyplot as plt
     plt.ion()

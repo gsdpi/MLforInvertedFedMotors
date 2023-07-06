@@ -1,9 +1,12 @@
 
 from models import *
+import pandas as pd
+from address import *
+import ast
 
 
 # Model factory pattern
-def modelGenerator(modelID:str,data,params:dict={}):
+def modelGenerator(modelID:str,data,params:dict={},verbose=False):
     '''
     ARGUMENTS
         modelID (str)                       ID that indicates the model type
@@ -13,6 +16,18 @@ def modelGenerator(modelID:str,data,params:dict={}):
     data = data
     modelID = modelID
     params  = params
+
+    if verbose:
+        print("Building model")
+
+    if not params:
+        if verbose:
+            print("loading best hyperparameters")
+        params_path  = get_param_path(modelID)
+        df_params    = pd.read_csv(params_path,index_col=0)
+        params       = ast.literal_eval(df_params.loc[data.dataID,'params'])[0]
+
+
     #TODO: Make it more generic: https://stackoverflow.com/questions/456672/class-factory-in-python 
     if modelID == "mlp":
         model = mlp(data,params)
@@ -36,7 +51,7 @@ if __name__ == "__main__":
     plt.ion()
     reset_seeds(seed_value=39)
     dataID = "raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27"
-    modelID = "svr"
+    modelID = "mlp"
     params = {}
     data = featureExtraction(dataID,statorFreqs=[37],testsID=[21,24])  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
     

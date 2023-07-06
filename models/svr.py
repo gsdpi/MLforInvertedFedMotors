@@ -16,7 +16,7 @@ class svr(object):
         self.kernel = params.get("kernel","rbf")     
         self.C      = params.get("C",3000)   
         self.gamma  = params.get("gamma",0.001)  
-        self.epochs = params.get("epochs",1000)
+        self.max_iter = params.get("max_iter",1000)
         # building the model
         self.model  = self.create_model()
     def train(self):
@@ -31,15 +31,31 @@ class svr(object):
         model = SVR(kernel=self.kernel,
                     C     = self.C,
                     gamma = self.gamma,
-                    max_iter= self.epochs)
+                    max_iter= self.max_iter)
         return model
 
     def predict(self,X):
         return self.model.predict(X)
 
+   # Class methods for hiperparameter tuning
     @classmethod
-    def type(cls):
+    def get_model_type(cls):
         return "sklearn"
+    @classmethod
+    def get_model_name(cls):
+        return "svr"
+    @classmethod
+    def get_randomSearch_params(cls):
+        param_grid = {'kernel':["poly","rbf","sigmoid"],
+                     'max_iter':np.arange(30,330,30,dtype='int').tolist(),
+                     'C':np.arange(50,3050,50,dtype='int').tolist(),
+                     'gamma' : np.arange(0.001,0.2,0.001,dtype='float').tolist()
+                    }
+        return param_grid
+    @classmethod
+    def get_model_obj(cls):
+        return SVR()
+
 
 # Unit testing
 if __name__ == "__main__":

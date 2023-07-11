@@ -9,13 +9,13 @@ import h5py
 import pandas as pd
 import numpy as np
 import os
-from utils import get_low_leakage_fft
+from utils import get_low_leakage_fft, get_peaks, estimate_fs_from_peaks
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 
 
 class featureExtraction(object):
-    def __init__(self, dataID:str,featsDomain: str='freq',statorFreqs:list=[37],testsID:list=[],testRatio:float=0.2,random_state:int=14,scaler_params:dict={})->None:
+    def __init__(self, dataID:str,featsDomain: str='freq',statorFreqs:list=[37],testsID:list=[],timesteps:int=540,testRatio:float=0.2,random_state:int=14,scaler_params:dict={})->None:
         '''
             PARAMS:
                 dataID (str)          String ID of the .h5 file to be processed.
@@ -28,6 +28,7 @@ class featureExtraction(object):
         self.N        = self.metadata.shape[0]
         self.statorFreqs = statorFreqs
         self.testRatio = testRatio
+        self.timesteps = timesteps
         with h5py.File(self.DATAPATH, 'r') as hf:
             self.data = hf['datos'][:]
         # Filtering data by the selected tests in testsID
@@ -41,12 +42,19 @@ class featureExtraction(object):
         if featsDomain=="freq":
             self.M,self.X = self.get_freq_feats()
             self.y = self.M[:,3]
+            axis_scaler = 0
+
         
-        
+        elif featsDomain=="time":
+            self.M,self.X = self.get_time_feats()
+            self.y = self.M[:,3]
+            self.y = np.tile(self.y,(self.X.shape[1],1)).T
+            axis_scaler = (0,1)
+
         # Normalization
         #scaler = MinMaxScaler()
         if scaler_params =={}:
-            self.scaler_params = (self.X.min(axis=0),self.X.max(axis=0))
+            self.scaler_params = (self.X.min(axis=axis_scaler),self.X.max(axis=axis_scaler))
         else:
             self.scaler_params = scaler_params
 
@@ -89,6 +97,43 @@ class featureExtraction(object):
         M = np.array(M)
         X = X = np.concatenate([np.abs(F),np.angle(F)],axis=1)
         return M,X
+    
+    def get_time_feats(self):
+        #TODO:
+        # 
+        
+        # Filtering the stator freqs (I am not sure about this)
+        idx = []
+        for statorFreq in self.statorFreqs: 
+            idx.append(np.where(self.metadata.iloc[:,1]==statorFreq)[0])
+        idx = np.concatenate(idx,axis=0)
+        
+        M = []
+        X = []
+        for sample_idx in idx:
+            # Get the basic data per sample
+            sample = self.data[sample_idx,...]
+            Fs   = self.metadata.iloc[sample_idx,1]
+            Fr   = self.metadata.iloc[sample_idx,2]
+            Temp = self.metadata.iloc[sample_idx,4]
+            i_a,u_ab,i_ab = self.get_alpha_beta(sample)
+            # Extraer un par de periodos de cada muestra y después repetir la temperataura.
+            # Podemos eliminar la fase o no. 
+            idx_peaks,_ = get_peaks(i_a,fm=20000)
+            Fs_est = estimate_fs_from_peaks(idx_peaks,20000)
+            if np.abs(Fs-Fs_est)<0.1:
+                # Randomly selecting a chunk of size selt.timestemps
+                idx       = np.random.choice(idx_peaks[:-3])
+                u_ab = u_ab[idx:idx+self.timesteps]
+                i_ab = i_ab[idx:idx+self.timesteps]          
+                #X.append(np.vstack([np.abs(u_ab),np.angle(u_ab),np.abs(i_ab),np.angle(i_ab)]).T)
+                X.append(np.vstack([np.real(u_ab),np.imag(u_ab),np.real(i_ab),np.imag(i_ab)]).T)
+                M.append([Fs_est, Fs, Fr, Temp])
+
+        M = np.array(M)            
+        X = np.stack(X,axis=0)    # dimensions: (sample, timesteps, feature)
+
+        return M,X
 
     def get_alpha_beta(self,sample):
         a = np.exp(1j*2*np.pi/3)
@@ -103,26 +148,40 @@ class featureExtraction(object):
 
         return i_a,u_ab,i_ab       
         
-    def get_time_feats(self):
-        pass
+
 
 # Unit testing
 if __name__ == "__main__":
     import ipdb
-
-    # Freq test
     dataID = "raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27"
-    data2 = featureExtraction(dataID,statorFreqs=[37,35],testsID=[21])  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
-    data = featureExtraction(dataID,statorFreqs=[37],testsID=[24,27])  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
+    # Freq test
+    # 
+    # data2 = featureExtraction(dataID,statorFreqs=[37,35],testsID=[21])  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
+    # data = featureExtraction(dataID,statorFreqs=[37],testsID=[24,27])  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
+
+    # import matplotlib.pyplot as plt
+    # plt.ion()
+    # plt.figure("X")
+    # for feat in range(data.X.shape[-1]):
+    #     plt.subplot(2,3,feat+1)
+    #     plt.plot(data.X[:,feat].T)
+    # plt.figure('y')
+    # plt.plot(data.y)
+
+    # # Time test
+
+    data = featureExtraction(dataID,featsDomain="time",statorFreqs=[37],testsID=[24,27],timesteps=1100)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27 
 
     import matplotlib.pyplot as plt
+    
+    idx = np.random.randint(data.X.shape[0])
+    sampleX = data.X[idx,...]
+    sampleY = data.y[idx,...]
     plt.ion()
-    plt.figure("X")
+    plt.figure()
+
     for feat in range(data.X.shape[-1]):
         plt.subplot(2,3,feat+1)
-        plt.plot(data.X[:,feat].T)
+        plt.plot(sampleX[:,feat])
     plt.figure('y')
-    plt.plot(data.y)
-
-    # Ejemplo de procesamiento con normalización procedente de otro procesamiento previo
-    
+    plt.plot(sampleY)

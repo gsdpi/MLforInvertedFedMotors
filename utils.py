@@ -6,6 +6,32 @@ from scipy.interpolate import interp1d
 import random as python_random
 import tensorflow as tf
 import os
+from scipy.signal import find_peaks, firwin, filtfilt
+
+# Function to get the peaks of a periodic signal:
+
+def get_peaks(x,fm,low_cut=30,high_cut=40):
+	"""
+	PARAMS
+		x:         signal where the peaks will be found
+		fm:        sampling freq.
+		low_cut:   Low cut in the band pass filter
+		high_cut:  High cut in the band pass filter
+
+	OUTPUT
+		- index where the peaks take place in the input signal x
+		- filtered signal
+	"""
+	b = firwin(500,[low_cut,high_cut],fs = fm, pass_zero='bandpass')
+	yf = filtfilt(b,1,x)
+	idx_peaks = np.where(np.diff(np.sign(yf))>0)[0]
+	return idx_peaks, yf
+
+
+def estimate_fs_from_peaks(y_peaks,fs):
+	tm = 1/fs
+	return 1/(np.mean(np.diff(y_peaks))*tm)
+
 
 # Function to get the data in first harmonics in a alpha beta representation.
 # Author: Ignacio Díaz Blanco
@@ -36,7 +62,7 @@ def get_low_leakage_fft(y,ypicos,fm=20000,Fs=37, num_periodos=8,primer_periodo=5
 	# 
 	# los tramos entre picos contienen periodos exactos
 
-	from scipy.signal import find_peaks, firwin, filtfilt
+	
 
 	metodo='filtrado'
 	if metodo=='picos':

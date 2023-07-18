@@ -43,6 +43,8 @@ def modelGenerator(modelID:str,data,params:dict={},verbose=False,debug = False):
         model = lstm(data,params)
     elif modelID == "rocket":
         model = rocket(data,params)
+    elif modelID == "esn":
+        model = esn(data,params)
     else:
         model = None
         raise Exception("Model not implemented")
@@ -70,9 +72,9 @@ if __name__ == "__main__":
 
 
     # Test time models
-    modelID = "rocket"
+    modelID = "esn"
     params = {}
-    data = featureExtraction(dataID,featsDomain="time",statorFreqs=[37,35,33],testsID=[21,24],timesteps=1100)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27 
+    data = featureExtraction(dataID,featsDomain="time",statorFreqs=[37],testsID=[21,24],timesteps=1100)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27 
     
     model = modelGenerator(modelID=modelID, data=data,params=params,debug=True)
     model.train()

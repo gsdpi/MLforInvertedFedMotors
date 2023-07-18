@@ -6,3 +6,4 @@ from .tcn import *
 from .seq2point import *
 from .lstm import *
 from .rocket import *
+from .esn import *

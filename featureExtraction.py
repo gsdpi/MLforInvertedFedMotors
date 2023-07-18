@@ -29,6 +29,8 @@ class featureExtraction(object):
         self.statorFreqs = statorFreqs
         self.testRatio = testRatio
         self.timesteps = timesteps
+        self.featsDomain = featsDomain
+        
         with h5py.File(self.DATAPATH, 'r') as hf:
             self.data = hf['datos'][:]
         # Filtering data by the selected tests in testsID

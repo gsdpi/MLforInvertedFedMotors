@@ -6,7 +6,7 @@ import ast
 
 
 # Model factory pattern
-def modelGenerator(modelID:str,data,params:dict={},verbose=False):
+def modelGenerator(modelID:str,data,params:dict={},verbose=False,debug = False):
     '''
     ARGUMENTS
         modelID (str)                       ID that indicates the model type
@@ -20,7 +20,7 @@ def modelGenerator(modelID:str,data,params:dict={},verbose=False):
     if verbose:
         print("Building model")
 
-    if not params:
+    if not params and not debug:
         if verbose:
             print("loading best hyperparameters")
         params_path  = get_param_path(modelID)
@@ -35,6 +35,14 @@ def modelGenerator(modelID:str,data,params:dict={},verbose=False):
         model = svr(data,params)
     elif modelID == "linearSGD":
         model = linearSGD(data,params)
+    elif modelID == "tcn":
+        model = tcn(data,params)
+    elif modelID == "seq2point":
+        model = seq2point(data,params)
+    elif modelID == "lstm":
+        model = lstm(data,params)
+    elif modelID == "rocket":
+        model = rocket(data,params)
     else:
         model = None
         raise Exception("Model not implemented")
@@ -51,11 +59,29 @@ if __name__ == "__main__":
     plt.ion()
     reset_seeds(seed_value=39)
     dataID = "raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27"
-    modelID = "mlp"
-    params = {}
-    data = featureExtraction(dataID,statorFreqs=[37],testsID=[21,24])  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
+
+    # Test freq models
+    # modelID = "mlp"
+    # params = {}
+    # data = featureExtraction(dataID,statorFreqs=[37],testsID=[21,24])  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
     
-    model = modelGenerator(modelID=modelID, data=data,params=params)
+    # model = modelGenerator(modelID=modelID, data=data,params=params)
+    # model.train()
+
+
+    # Test time models
+    modelID = "rocket"
+    params = {}
+    data = featureExtraction(dataID,featsDomain="time",statorFreqs=[37,35,33],testsID=[21,24],timesteps=1100)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27 
+    
+    model = modelGenerator(modelID=modelID, data=data,params=params,debug=True)
     model.train()
-    # training_hist = pd.DataFrame(model.training_hist.history)
-    # training_hist.plot()
+
+    if model.get_model_type=="keras":
+        training_hist = pd.DataFrame(model.training_hist.history)
+        training_hist.plot()
+    
+    y_est = model.predict(data.X)
+    plt.figure()
+    plt.plot(data.y[:,-1])
+    plt.plot(y_est)

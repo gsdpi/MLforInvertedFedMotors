@@ -1,0 +1,2 @@
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'kernel_size': 5, 'n_kernels': 64, 'n_convBlocks': 2, 'activation': 'tanh', 'initializer': 'glorot_uniform', 'lr': 0.00034863892704459074, 'beta': 0.8, 'epochs': 300, 'batch_size': 24}]","[2.139963388442993, 2.139963388442993, 0.9372740983963013]"

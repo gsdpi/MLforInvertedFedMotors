@@ -1,13 +1,13 @@
 # Implementation of tcn from https://arxiv.org/pdf/1803.01271.pdf
 import numpy as np
-from featureExtraction import featureExtraction
 from .rocket_functions import generate_kernels, apply_kernels
 from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 import ipdb
+from sklearn.base import BaseEstimator
 
 class rocket(object):
-    def __init__(self,data: featureExtraction, params: dict, **kwargs) -> None:      
+    def __init__(self,data, params: dict, **kwargs) -> None:      
         self.data    = data
         self.X_train = data.X_train
         self.X_test  = data.X_test
@@ -44,6 +44,7 @@ class rocket(object):
         self.model.fit(self.X_train_,self.y_train)   
 
         self.y_test_est = self.model.predict(self.X_test_)
+        
         self.test_MSE, self.test_MAE = mean_squared_error(self.y_test,self.y_test_est), mean_absolute_error(self.y_test,self.y_test_est)   
         print(f'Test MSE: {self.test_MSE}    Test MAE: {self.test_MAE}  ')
 
@@ -55,53 +56,56 @@ class rocket(object):
 
     @classmethod
     def get_model_type(cls):
-        return "sklearn"
+        return "rocket"
     
     @classmethod
     def get_model_name(cls):
         return "rocket"
 
     @classmethod
-    def get_randomSearch_params(cls,hp):
-        param_grid = {'hiddenLayerUnits':[hp.Int("neurons_l1", min_value=10, max_value=200, step=10),
-                                          hp.Int("neurons_l2", min_value=10, max_value=200, step=10),
-                                          hp.Int("neurons_l3", min_value=10, max_value=200, step=10)],
-                     'activation':        hp.Choice("activation", ["relu", "tanh","sigmoid"]),
-                     'initializer':       "glorot_uniform",
-                     'lr' :                hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log"),
-                     'beta' :              0.8,
-                     'epochs':             300,
-                     'batch_size':         hp.Int("batch_size", min_value=4, max_value=32, step=4),
-                     'n_layers':           hp.Choice("n_layers", [1,2,3])
-
+    def get_randomSearch_params(cls):
+        param_grid = {'n_kernels':np.arange(100,500,100,dtype='int').tolist(),
+                     'alpha' : np.arange(0.1,5,0.1,dtype='float').tolist()
                     }
-        
         return param_grid
-    
+
+#https://stackoverflow.com/questions/74852797/wrap-model-with-sklearn-interface
     @classmethod
-    def get_model_obj(cls,data):
+    def get_model_obj(cls,data,params):
 
-        def build_model(hp):
-            params = cls.get_randomSearch_params(hp)
-            model  = cls(data,params).model
-            return model
+        class Wrapper(BaseEstimator):
+            
+            def __init__(self, data,n_kernels,alpha):
+                self.data = data
+                self.n_kernels = n_kernels
+                self.alpha = alpha
+                self.params = {"n_kernels":self.n_kernels,"alpha":self.alpha}
+                self.model = cls(data,params)
+            
+            def fit(self, X,y):
+                self.model.X_train = X
+                self.model.y_train = y[:,-1]
+                self.model.train()
+                return self
 
-        return build_model
-    @classmethod 
-    def get_params_from_hp(cls,best_hp):
-        params = {'hiddenLayerUnits':[best_hp["neurons_l1"],
-                                          best_hp["neurons_l2"],
-                                          best_hp["neurons_l3"]],
-                       'activation':      best_hp["activation"],
-                        'initializer':    "glorot_uniform",
-                        'lr' :            best_hp["lr"],
-                        'beta' :          0.8,
-                        'epochs':         300,
-                        'batch_size':     best_hp["batch_size"],
-                        'n_layers':       best_hp["n_layers"]
-                    }
+            def predict(self, X):
+                return self.model.predict(X)
+            
+            def score(self, X,y):
+                y = y[:,-1]
+                y_ = self.model.predict(X)
+                ipdb.set_trace()
+                return mean_squared_error(y,y_)
 
-        return params
+            def get_params(self, deep=True):
+                return {"data":self.data,"n_kernels":self.n_kernels,"alpha":self.alpha}
+
+            def set_params(self, **params):
+                self.data = params.get("data")
+                self.n_kernels = params.get("n_kernels")
+                self.alpha = params.get("alpha")
+                return self
+        return Wrapper(data,params["n_kernels"],params["alpha"])
     
 
 # Unit testing

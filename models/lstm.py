@@ -101,18 +101,18 @@ class lstm(object):
     def get_model_name(cls):
         return "lstm"
 
+
     @classmethod
     def get_randomSearch_params(cls,hp):
-        param_grid = {'hiddenLayerUnits':[hp.Int("neurons_l1", min_value=10, max_value=200, step=10),
-                                          hp.Int("neurons_l2", min_value=10, max_value=200, step=10),
-                                          hp.Int("neurons_l3", min_value=10, max_value=200, step=10)],
-                     'activation':        hp.Choice("activation", ["relu", "tanh","sigmoid"]),
-                     'initializer':       "glorot_uniform",
-                     'lr' :                hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log"),
-                     'beta' :              0.8,
-                     'epochs':             300,
-                     'batch_size':         hp.Int("batch_size", min_value=4, max_value=32, step=4),
-                     'n_layers':           hp.Choice("n_layers", [1,2,3])
+        param_grid = {'conv'       :  hp.Choice("conv", [True,False]),
+                     'kernel_size' :  hp.Choice("kernel_size", [3,5,7,11,15,23,32]),
+                     'n_kernels'   :  hp.Choice("n_kernels", [16,32,64]),
+                     'units_lstm'  :  hp.Choice("units_lstm", [32,64,128,256]),
+                     'return_seq'  :  hp.Choice("return_seq", [True,False]),                    
+                     'lr'          :  hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log"),
+                     'beta'        :  0.8,
+                     'epochs'      :  300,
+                     'batch_size'  :  hp.Int("batch_size", min_value=4, max_value=32, step=4)
 
                     }
         
@@ -129,16 +129,15 @@ class lstm(object):
         return build_model
     @classmethod 
     def get_params_from_hp(cls,best_hp):
-        params = {'hiddenLayerUnits':[best_hp["neurons_l1"],
-                                          best_hp["neurons_l2"],
-                                          best_hp["neurons_l3"]],
-                       'activation':      best_hp["activation"],
-                        'initializer':    "glorot_uniform",
-                        'lr' :            best_hp["lr"],
-                        'beta' :          0.8,
-                        'epochs':         300,
-                        'batch_size':     best_hp["batch_size"],
-                        'n_layers':       best_hp["n_layers"]
+        params = {      'conv'        :  best_hp["conv"],                  
+                        'kernel_size' :  best_hp["kernel_size"],
+                        'n_kernels'   :  best_hp["n_kernels"],
+                        'units_lstm'  :  best_hp["units_lstm"],
+                        'return_seq'  :  best_hp["return_seq"],
+                        'lr'          :  best_hp["lr"],
+                        'beta'        :  0.8,
+                        'epochs'      :  300,
+                        'batch_size'  :  best_hp["batch_size"]
                     }
 
         return params

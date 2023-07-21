@@ -1,0 +1,2 @@
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'conv': 1, 'kernel_size': 15, 'n_kernels': 64, 'units_lstm': 128, 'return_seq': 1, 'lr': 0.0002469315956883544, 'beta': 0.8, 'epochs': 300, 'batch_size': 28}]","[3.5309696197509766, 3.5309696197509766, 1.2991163730621338]"

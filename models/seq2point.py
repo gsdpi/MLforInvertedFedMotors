@@ -18,8 +18,9 @@ class seq2point(object):
         # Params: units, num. layers, 
 
         self.kernel_size    = params.get("kernel_size",20)
-        self.numKernels     = params.get("numKernels",[16,16,16,16])
-        self.n_convs   = params.get("n_conv",4)
+        self.n_kernels      = params.get("n_kernels",16)
+        self.n_convBlocks   = params.get("n_conv",4)
+        self.numKernels     = [ self.n_kernels*(i+1) for i in range(self.n_convBlocks)]   
         
         
         self.activation         = params.get("activation","relu")
@@ -40,7 +41,7 @@ class seq2point(object):
         # Creating layers
         self.input_layer = layers.Input(dtype = tf.float32,shape=[self.n_timesteps,self.n_feats],name='input')
         
-        for ll in range(self.n_convs):
+        for ll in range(self.n_convBlocks):
             self.layers.append(layers.Conv1D(filters=self.numKernels[ll],
                                             kernel_size=self.kernel_size,
                                             strides = 1,
@@ -104,18 +105,19 @@ class seq2point(object):
     def get_model_name(cls):
         return "seq2point"
 
+
     @classmethod
     def get_randomSearch_params(cls,hp):
-        param_grid = {'hiddenLayerUnits':[hp.Int("neurons_l1", min_value=10, max_value=200, step=10),
-                                          hp.Int("neurons_l2", min_value=10, max_value=200, step=10),
-                                          hp.Int("neurons_l3", min_value=10, max_value=200, step=10)],
-                     'activation':        hp.Choice("activation", ["relu", "tanh","sigmoid"]),
-                     'initializer':       "glorot_uniform",
-                     'lr' :                hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log"),
-                     'beta' :              0.8,
-                     'epochs':             300,
-                     'batch_size':         hp.Int("batch_size", min_value=4, max_value=32, step=4),
-                     'n_layers':           hp.Choice("n_layers", [1,2,3])
+        param_grid = {'kernel_size'   : hp.Choice("kernel_size", [3,5,7,11,15]),
+                      'n_kernels'     : hp.Choice("n_kernels", [16,32,64]),
+                      'n_convBlocks'  : hp.Choice("n_convBlocks", [2,4,6,8]),
+                      'activation'    : hp.Choice("activation", ["relu", "tanh","sigmoid"]),
+                      'initializer'   : "glorot_uniform",
+                      'lr'            : hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log"),
+                      'beta'          : 0.8,
+                      'epochs'        : 300,
+                      'batch_size'    : hp.Int("batch_size", min_value=4, max_value=32, step=4)
+                      
 
                     }
         
@@ -132,16 +134,15 @@ class seq2point(object):
         return build_model
     @classmethod 
     def get_params_from_hp(cls,best_hp):
-        params = {'hiddenLayerUnits':[best_hp["neurons_l1"],
-                                          best_hp["neurons_l2"],
-                                          best_hp["neurons_l3"]],
-                       'activation':      best_hp["activation"],
-                        'initializer':    "glorot_uniform",
+        params = {      'kernel_size'   : best_hp["kernel_size"],
+                        'n_kernels'     : best_hp["n_kernels"],
+                        'n_convBlocks'  : best_hp["n_convBlocks"],
+                        'activation'    : best_hp["activation"],
+                        'initializer'   : "glorot_uniform",
                         'lr' :            best_hp["lr"],
                         'beta' :          0.8,
                         'epochs':         300,
-                        'batch_size':     best_hp["batch_size"],
-                        'n_layers':       best_hp["n_layers"]
+                        'batch_size':     best_hp["batch_size"]
                     }
 
         return params

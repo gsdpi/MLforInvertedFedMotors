@@ -1,2 +1,38 @@
 ,params,score
 raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'hiddenLayerUnits': [130, 140, 10], 'activation': 'tanh', 'initializer': 'glorot_uniform', 'lr': 0.0014317635468985984, 'beta': 0.8, 'epochs': 300, 'batch_size': 4, 'n_layers': 2}]","[0.5052308440208435, 0.5052308440208435, 0.5109227895736694]"
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'kernel_size': 3, 'n_kernels': 32, 'useSkips': 0, 'dropout_rate': 0.08604278478588351, 'lr': 0.00025363862196633427, 'beta': 0.8, 'epochs': 300, 'batch_size': 4}]","[9.438522338867188, 9.438522338867188, 2.0566585063934326]"
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'kernel_size': 3, 'n_kernels': 32, 'useSkips': 0, 'dropout_rate': 0.08604278478588351, 'lr': 0.00025363862196633427, 'beta': 0.8, 'epochs': 300, 'batch_size': 4}]","[9.364856719970703, 9.364856719970703, 2.039760112762451]"
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'kernel_size': 3, 'n_kernels': 32, 'n_convBlocks': 6, 'activation': 'relu', 'initializer': 'glorot_uniform', 'lr': 0.00025363862196633427, 'beta': 0.8, 'epochs': 300, 'batch_size': 4}]","[8.002968788146973, 8.002968788146973, 2.1655075550079346]"
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'conv': 1, 'kernel_size': 11, 'n_kernels': 16, 'units_lstm': 32, 'return_seq': 1, 'lr': 0.000103699753028074, 'beta': 0.8, 'epochs': 300, 'batch_size': 28}]","[14.746258735656738, 14.746258735656738, 2.489379405975342]"
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'kernel_size': 15, 'n_kernels': 64, 'useSkips': 1, 'dropout_rate': 0.28588355302027946, 'lr': 0.00023296415902195254, 'beta': 0.8, 'epochs': 300, 'batch_size': 16}]","[5.803545951843262, 5.803545951843262, 1.6819381713867188]"
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'kernel_size': 5, 'n_kernels': 64, 'n_convBlocks': 2, 'activation': 'tanh', 'initializer': 'glorot_uniform', 'lr': 0.00034863892704459074, 'beta': 0.8, 'epochs': 300, 'batch_size': 24}]","[2.139963388442993, 2.139963388442993, 0.9372740983963013]"
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'conv': 1, 'kernel_size': 15, 'n_kernels': 64, 'units_lstm': 128, 'return_seq': 1, 'lr': 0.0002469315956883544, 'beta': 0.8, 'epochs': 300, 'batch_size': 28}]","[3.5309696197509766, 3.5309696197509766, 1.2991163730621338]"
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,,
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,,
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'n_kernels': 300, 'data': <featureExtraction.featureExtraction object at 0x7fb342961a20>, 'alpha': 2.2}]",
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'n_kernels': 300, 'data': <featureExtraction.featureExtraction object at 0x7f27721bab00>, 'alpha': 2.2}]",
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'n_kernels': 300, 'data': <featureExtraction.featureExtraction object at 0x7f9e7c42dc30>, 'alpha': 2.2}]",
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'n_kernels': 300, 'data': <featureExtraction.featureExtraction object at 0x7f6eb9fae9b0>, 'alpha': 2.2}]",
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'n_kernels': 300, 'data': <featureExtraction.featureExtraction object at 0x7f80a8ba8bb0>, 'alpha': 2.2}]",
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'n_kernels': 300, 'data': <featureExtraction.featureExtraction object at 0x7f85d7446170>, 'alpha': 2.2}]",
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'n_kernels': 300, 'data': <featureExtraction.featureExtraction object at 0x7f85d7447640>, 'alpha': 2.2}]",
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'n_kernels': 300, 'data': <featureExtraction.featureExtraction object at 0x7f19284fb1c0>, 'alpha': 3.4000000000000004}]",31.17624840119932
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'n_kernels': 300, 'data': <featureExtraction.featureExtraction object at 0x7fd736c761d0>, 'alpha': 3.4000000000000004}]",51.2822241355703

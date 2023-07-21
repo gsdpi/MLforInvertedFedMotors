@@ -18,20 +18,23 @@ class tcn(object):
         self.n_timesteps= self.X_train.shape[1]
         # Params: units, num. layers, 
 
-        self.kernel_size    = params.get("kernel_size",20)
-        self.numKernels     = params.get("numKernels",[16,16,16,16,16,16,16,16])
-        self.n_tempBlocks   = params.get("n_tempBlocks",8)
-        self.numDilatations = [2**i  for i in range(len(self.numKernels))]
+        self.kernel_size    = params.get("kernel_size",4)
+        self.n_kernels      = params.get("n_kernels",16)
+        self.dilation_base  = params.get("dilation_base",2)
+        self.n_tempBlocks   = self.get_receptive_field()
+
+        self.numKernels         = [ self.n_kernels*(i+1) for i in range(self.n_tempBlocks)]        
+        self.numDilatations     = [2**i  for i in range(self.n_tempBlocks)]
         #self.numDilatations = [1, 2, 2, 2, 2]
-        self.useSkips =  params.get("useSkips",True)
-        self.dropout_rate =  params.get("dropout_rate",0.2)
+        self.useSkips           =  params.get("useSkips",True)
+        self.dropout_rate       =  params.get("dropout_rate",0.2)
         self.lr                 = params.get("lr",0.001)
         self.beta               = params.get("beta",0.8)
         self.epochs             = params.get("epochs",300)
         self.batch_size         = params.get("batch_size",16)
         self.min_delta          = params.get("min_delta",0.001)
         self.patience           = params.get("pacience",30)
-
+        
         # List with all keras layers
         self.layers = []
         self.skips  = []
@@ -100,7 +103,13 @@ class tcn(object):
         y_est = self.model.predict(X, batch_size=128) 
         return y_est.squeeze()
 
-
+    # https://unit8.com/resources/temporal-convolutional-networks-and-forecasting/
+    def get_receptive_field(self):
+        k = self.kernel_size
+        b = self.dilation_base 
+        l = self.n_timesteps
+        r = np.ceil(np.log2(((l-1)*(b-1))/((k-1)*2) +1))
+        return int(r)
     @classmethod
     def get_model_type(cls):
         return "keras"
@@ -109,19 +118,18 @@ class tcn(object):
     def get_model_name(cls):
         return "tcn"
 
+
     @classmethod
     def get_randomSearch_params(cls,hp):
-        param_grid = {'hiddenLayerUnits':[hp.Int("neurons_l1", min_value=10, max_value=200, step=10),
-                                          hp.Int("neurons_l2", min_value=10, max_value=200, step=10),
-                                          hp.Int("neurons_l3", min_value=10, max_value=200, step=10)],
-                     'activation':        hp.Choice("activation", ["relu", "tanh","sigmoid"]),
-                     'initializer':       "glorot_uniform",
-                     'lr' :                hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log"),
-                     'beta' :              0.8,
-                     'epochs':             300,
-                     'batch_size':         hp.Int("batch_size", min_value=4, max_value=32, step=4),
-                     'n_layers':           hp.Choice("n_layers", [1,2,3])
-
+        param_grid = {'kernel_size'   : hp.Choice("kernel_size", [3,5,7,11,15]),
+                     'n_kernels'      : hp.Choice("n_kernels", [16,32,64]),
+                     'useSkips'       : hp.Choice("useSkips", [True, False]),
+                     'dropout_rate'   : hp.Float("dropout_rate", min_value=0., max_value=0.3),
+                     'lr'             : hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log"),
+                     'beta'           : 0.8,
+                     'epochs'         : 300,
+                     'batch_size'     : hp.Int("batch_size", min_value=4, max_value=32, step=4)
+                    
                     }
         
         return param_grid
@@ -137,16 +145,16 @@ class tcn(object):
         return build_model
     @classmethod 
     def get_params_from_hp(cls,best_hp):
-        params = {'hiddenLayerUnits':[best_hp["neurons_l1"],
-                                          best_hp["neurons_l2"],
-                                          best_hp["neurons_l3"]],
-                       'activation':      best_hp["activation"],
-                        'initializer':    "glorot_uniform",
-                        'lr' :            best_hp["lr"],
-                        'beta' :          0.8,
-                        'epochs':         300,
-                        'batch_size':     best_hp["batch_size"],
-                        'n_layers':       best_hp["n_layers"]
+
+        params = {'kernel_size'   : best_hp["kernel_size"],
+                     'n_kernels'      : best_hp["n_kernels"],
+                     'useSkips'       : best_hp["useSkips"],
+                     'dropout_rate'   : best_hp["dropout_rate"],
+                     'lr'             : best_hp["lr"],
+                     'beta' :          0.8,
+                     'epochs':         300,
+                     'batch_size':     best_hp["batch_size"]
+                    
                     }
 
         return params

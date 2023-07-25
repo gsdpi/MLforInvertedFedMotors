@@ -72,11 +72,11 @@ if __name__ == "__main__":
 
 
     # Test time models
-    modelID = "seq2point"
+    modelID = "lstm"
     params = {}
     data = featureExtraction(dataID,featsDomain="time",statorFreqs=[37],testsID=[21,24],timesteps=1100)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27 
     
-    model = modelGenerator(modelID=modelID, data=data,params=params,debug=True)
+    model = modelGenerator(modelID=modelID, data=data,params=params,debug=False)
     model.train()
 
     if model.get_model_type=="keras":

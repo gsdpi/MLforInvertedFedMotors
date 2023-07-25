@@ -1,0 +1,2 @@
+,params,score
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'scale_input': 5, 'n_states': 300, 'rho': 0.95, 'sparsity': 0.01, 'lr': 0.025, 'Win_scale':150,'Wfb_scale':0.,'input_scale':5,'Washout':0,'alpha':0.01,'set_bias':0}]",0.9990148316159525

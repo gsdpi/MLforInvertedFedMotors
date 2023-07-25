@@ -72,6 +72,8 @@ elif model.get_model_type() == "rocket":
     sk_searcher = RandomizedSearchCV(model_obj, param_distributions=params_grid,cv=5, n_iter=N_ITER_MAX)
     sk_searcher.fit(data.X_train,data.y_train)
     #Formatting paramas
+    bestParams = sk_searcher.best_params_
+    bestParams.pop("data")
     results.loc[DATAID,'params'] = [sk_searcher.best_params_]
     results.loc[DATAID,'score'] = sk_searcher.best_score_
     print(f"Best score: {sk_searcher.best_score_}")

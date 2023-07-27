@@ -14,7 +14,7 @@ def get_peaks(x,fm,low_cut=30,high_cut=40):
 	"""
 	PARAMS
 		x:         signal where the peaks will be found
-		fm:        sampling freq.
+		fm:        cut freq.
 		low_cut:   Low cut in the band pass filter
 		high_cut:  High cut in the band pass filter
 
@@ -22,7 +22,7 @@ def get_peaks(x,fm,low_cut=30,high_cut=40):
 		- index where the peaks take place in the input signal x
 		- filtered signal
 	"""
-	b = firwin(500,[low_cut,high_cut],fs = fm, pass_zero='bandpass')
+	b = firwin(50,[low_cut,high_cut],fs = fm, pass_zero='bandpass')
 	yf = filtfilt(b,1,x)
 	idx_peaks = np.where(np.diff(np.sign(yf))>0)[0]
 	return idx_peaks, yf

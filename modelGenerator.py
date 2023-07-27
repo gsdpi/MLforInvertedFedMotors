@@ -72,18 +72,25 @@ if __name__ == "__main__":
 
 
     # Test time models
-    modelID = "lstm"
+    modelID = "seq2point"
     params = {}
-    data = featureExtraction(dataID,featsDomain="time",statorFreqs=[37],testsID=[21,24],timesteps=1100)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27 
-    
+    data = featureExtraction(dataID,featsDomain="time",statorFreqs=[37,35,33],testsID=[21,24],timesteps=800,Fm= 20000,Fm_target=2000)
+    dataTest = featureExtraction(dataID,featsDomain="time",statorFreqs=[37,35,33],testsID=[24,27],timesteps=800,Fm= 20000,Fm_target=2000,scaler_params=data.get_scaler_params())  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27 
+
+   
     model = modelGenerator(modelID=modelID, data=data,params=params,debug=False)
     model.train()
+
 
     if model.get_model_type=="keras":
         training_hist = pd.DataFrame(model.training_hist.history)
         training_hist.plot()
     
-    y_est = model.predict(data.X)
+    y_est = model.predict(dataTest.X)
+
+
     plt.figure()
-    plt.plot(data.y[:,-1])
-    plt.plot(y_est)
+    plt.plot(dataTest.y[:,-1],color = "blue", alpha=0.7,label= "real")
+    plt.plot(y_est,color = "orange", alpha=0.7,label= "estimation")
+    plt.legend()
+

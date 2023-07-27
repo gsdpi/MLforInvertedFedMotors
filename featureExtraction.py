@@ -12,10 +12,11 @@ import os
 from utils import get_low_leakage_fft, get_peaks, estimate_fs_from_peaks
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
+from scipy import signal
 
 
 class featureExtraction(object):
-    def __init__(self, dataID:str,featsDomain: str='freq',statorFreqs:list=[37],testsID:list=[],timesteps:int=540,testRatio:float=0.2,random_state:int=14,scaler_params:dict={})->None:
+    def __init__(self, dataID:str,featsDomain: str='freq',statorFreqs:list=[37],testsID:list=[],timesteps:int=540,testRatio:float=0.2,random_state:int=14,scaler_params:dict={},Fm:int=20000,Fm_target:int =20000)->None:
         '''
             PARAMS:
                 dataID (str)          String ID of the .h5 file to be processed.
@@ -30,6 +31,8 @@ class featureExtraction(object):
         self.testRatio = testRatio
         self.timesteps = timesteps
         self.featsDomain = featsDomain
+        self.Fm = Fm
+        self.Fm_target = Fm_target
         
         with h5py.File(self.DATAPATH, 'r') as hf:
             self.data = hf['datos'][:]
@@ -84,7 +87,7 @@ class featureExtraction(object):
 
             i_a,u_ab,i_ab = self.get_alpha_beta(sample)
             x = np.array([i_ab, u_ab]).T 
-            ll_fft = get_low_leakage_fft(x,i_a,Fs=Fs) 
+            ll_fft = get_low_leakage_fft(x,i_a,fm = self.Fm,Fs=Fs) 
             S       = ll_fft["espectro"]
             Fs_est  = ll_fft['frecuencia_estimada']
             # TODO:
@@ -115,21 +118,26 @@ class featureExtraction(object):
         for sample_idx in idx:
             # Get the basic data per sample
             sample = self.data[sample_idx,...]
+            if self.Fm_target < self.Fm:
+                sample = signal.decimate(sample,q = int(self.Fm/self.Fm_target),axis=0)
+                
             Fs   = self.metadata.iloc[sample_idx,1]
             Fr   = self.metadata.iloc[sample_idx,2]
             Temp = self.metadata.iloc[sample_idx,4]
             i_a,u_ab,i_ab = self.get_alpha_beta(sample)
             # Extraer un par de periodos de cada muestra y después repetir la temperataura.
             # Podemos eliminar la fase o no. 
-            idx_peaks,_ = get_peaks(i_a,fm=20000)
-            Fs_est = estimate_fs_from_peaks(idx_peaks,20000)
+            idx_peaks,_ = get_peaks(i_a,fm=self.Fm_target)
+            Fs_est = estimate_fs_from_peaks(idx_peaks,self.Fm_target)
+            n_periods_selected = int(np.ceil(Fs*self.timesteps/self.Fm_target))
             if np.abs(Fs-Fs_est)<0.1:
                 # Randomly selecting a chunk of size selt.timestemps
-                idx       = np.random.choice(idx_peaks[:-3])
+                idx       = np.random.choice(idx_peaks[:-n_periods_selected])
                 u_ab = u_ab[idx:idx+self.timesteps]
-                i_ab = i_ab[idx:idx+self.timesteps]          
+                i_ab = i_ab[idx:idx+self.timesteps]
+                i_a  = i_a[idx:idx+self.timesteps]          
                 #X.append(np.vstack([np.abs(u_ab),np.angle(u_ab),np.abs(i_ab),np.angle(i_ab)]).T)
-                X.append(np.vstack([np.real(u_ab),np.imag(u_ab),np.real(i_ab),np.imag(i_ab)]).T)
+                X.append(np.vstack([np.real(u_ab),np.imag(u_ab),np.real(i_ab),np.imag(i_ab),i_a]).T)
                 M.append([Fs_est, Fs, Fr, Temp])
 
         M = np.array(M)            
@@ -172,7 +180,7 @@ if __name__ == "__main__":
 
     # # Time test
 
-    data = featureExtraction(dataID,featsDomain="time",statorFreqs=[37],testsID=[24,27],timesteps=1100)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27 
+    data = featureExtraction(dataID,featsDomain="time",statorFreqs=[37],testsID=[24,27],timesteps=800,Fm= 20000,Fm_target=2000)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27 
 
     import matplotlib.pyplot as plt
     
@@ -187,3 +195,41 @@ if __name__ == "__main__":
         plt.plot(sampleX[:,feat])
     plt.figure('y')
     plt.plot(sampleY)
+
+
+    # Pruueba corrientes
+    plt.close("Temperatura")
+    plt.figure("Temperatura")
+    plt.plot(data.y[:,-1])
+    
+
+    b = signal.firwin(25,0.01)
+    temp = data.y[:,-1]
+    temp_ = signal.filtfilt(b, 1, temp)
+
+    plt.close("Temperatura filt")
+    plt.figure("Temperatura filt")
+    plt.plot(temp)
+    plt.plot(temp_)
+    plt.plot((temp-temp_)*25)
+    
+    # Del transitorio de temperatura 480-505 (seleccionados a ojo)
+    start = 905
+    end = 930
+    stride = 1
+    temps = data.y[start:end:stride,-1]
+    max_temp = temps.max()
+    min_temp = temps.min()
+    
+    temps = (temps -min_temp)/(max_temp-min_temp)
+    temps = 0.2 + temps*0.8/1
+    plt.close("transitorio")
+    plt.figure("transitorio")
+    for ii,i in enumerate(range(start,end,stride)):
+        plt.subplot(2,2,1)
+        plt.plot(data.X[i,:,-1],label=f"{data.y[i,-1]}",color=plt.cm.PuRd(temps[ii]),alpha=0.5)
+        plt.title("Coriente i_a")
+        plt.subplot(2,2,3)
+        plt.subplot(2,2,2)
+        plt.plot(data.X[i,:,2],label=f"{data.y[i,-1]}",color=plt.cm.PuRd(temps[ii]),alpha=0.5)
+        plt.title("Corriente i_alpha")

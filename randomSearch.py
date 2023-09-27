@@ -27,7 +27,7 @@ parser.add_argument("-dataid", action="store", help="string with name of .h5 use
 parser.add_argument("-stator_freq", action="store", help="list with the stator freqs used to extract features",type = str,default="37")
 parser.add_argument("-testIDs", action="store", help="list with the number os tests used for training", type = str, default="21,24")
 parser.add_argument("-domain", action="store", help="features domain", default="freq")
-parser.add_argument("-timesteps", action="store", help="timesteps in time domain", type = int,default=1100)
+parser.add_argument("-timesteps", action="store", help="timesteps in time domain", type = int,default=800)
 parser.add_argument("-modelID", action="store", help="string with id of the model to be fine tunned", default="mlp")
 parser.add_argument("-n_iter", action="store", help="max. number of iterations in the search", type = int,  default=50)
 parser.add_argument("-iter_sample", action="store", help=" number of runs per sample in the search",type =int,  default=2)
@@ -47,7 +47,7 @@ N_ITER_PER_SAMPLE = args.iter_sample # 2
 params       = {}
 
 print("Reading data")
-data = featureExtraction(DATAID,statorFreqs=STATOR_FREQs,testsID=TESTIDs,featsDomain=DOMAIN,timesteps=1100) 
+data = featureExtraction(DATAID,statorFreqs=STATOR_FREQs,testsID=TESTIDs,featsDomain=DOMAIN,timesteps=TIMESTEPS,Fm=20000,Fm_target=2000) 
 print("Creating model")
 params = {"_":None} # TODO: improve this with subclassing
 model = modelGenerator(modelID=MODELID, data=data,params=params)
@@ -77,7 +77,21 @@ elif model.get_model_type() == "rocket":
     results.loc[DATAID,'params'] = [sk_searcher.best_params_]
     results.loc[DATAID,'score'] = sk_searcher.best_score_
     print(f"Best score: {sk_searcher.best_score_}")
-
+    
+elif model.get_model_type() == "reservoir":
+    params_grid = model.get_randomSearch_params()
+    params_grid["data"] = [data]
+    params = {"n_states":300,"rho":0.95,"sparsity":0.01,"lr":0.025,"Win_scale":150,"input_scale":5,"Warmup":100,"alpha":0.01}
+    model_obj   = model.get_model_obj(data,params)
+    # Searching params
+    sk_searcher = RandomizedSearchCV(model_obj, param_distributions=params_grid,cv=5, n_iter=N_ITER_MAX,verbose=3)
+    sk_searcher.fit(data.X_train,data.y_train)
+    #Formatting paramas
+    bestParams = sk_searcher.best_params_
+    bestParams.pop("data")
+    results.loc[DATAID,'params'] = [sk_searcher.best_params_]
+    results.loc[DATAID,'score'] = sk_searcher.best_score_
+    print(f"Best score: {sk_searcher.best_score_}")
 elif model.get_model_type() == "keras":
 
     # building hyper-model 

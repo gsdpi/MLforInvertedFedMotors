@@ -1,2 +1,2 @@
 ,params,score
-raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'scale_input': 5, 'n_states': 300, 'rho': 0.95, 'sparsity': 0.01, 'lr': 0.025, 'Win_scale':150,'Wfb_scale':0.,'input_scale':5,'Washout':0,'alpha':0.01,'set_bias':0}]",0.9990148316159525
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'sparsity': 0.1, 'rho': 0.8000000000000003, 'n_states': 300, 'lr': 0.3, 'input_scale': 5, 'alpha': 0.0001, 'Win_scale': 150, 'Warmup': 100}]",0.9966235916265989

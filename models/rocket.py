@@ -2,7 +2,7 @@
 import numpy as np
 from .rocket_functions import generate_kernels, apply_kernels
 from sklearn.linear_model import Ridge
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import ipdb
 from sklearn.base import BaseEstimator
 
@@ -94,8 +94,8 @@ class rocket(object):
             def score(self, X,y):
                 y = y[:,-1]
                 y_ = self.model.predict(X)
-                ipdb.set_trace()
-                return mean_squared_error(y,y_)
+                
+                return r2_score(y,y_)
 
             def get_params(self, deep=True):
                 return {"data":self.data,"n_kernels":self.n_kernels,"alpha":self.alpha}
@@ -104,6 +104,8 @@ class rocket(object):
                 self.data = params.get("data")
                 self.n_kernels = params.get("n_kernels")
                 self.alpha = params.get("alpha")
+                self.params = {"n_kernels":self.n_kernels,"alpha":self.alpha}
+                self.model = cls(data,params)
                 return self
         return Wrapper(data,params["n_kernels"],params["alpha"])
     

@@ -188,11 +188,17 @@ if __name__ == "__main__":
     sampleX = data.X[idx,...]
     sampleY = data.y[idx,...]
     plt.ion()
-    plt.figure()
+    # Imagen para presentación resultados 28/09/23
+    labels = [r"$u_{\alpha}$",r"$u_{\beta}$",r"$i_{\alpha}$",r"$i_{\beta}$"]
+    plt.figure("Entrada",figsize=(10,7))
+    plt.clf()
+    for i,feat in enumerate(reversed(range(data.X.shape[-1]-1))):
+        plt.plot(sampleX[:,feat]+1.2*i,label = labels[i])
 
-    for feat in range(data.X.shape[-1]):
-        plt.subplot(2,3,feat+1)
-        plt.plot(sampleX[:,feat])
+    plt.xlabel("Time",fontdict={"fontsize":15})
+    plt.ylabel("Feats",fontdict={"fontsize":15})
+    plt.legend(fontsize=15)
+
     plt.figure('y')
     plt.plot(sampleY)
 

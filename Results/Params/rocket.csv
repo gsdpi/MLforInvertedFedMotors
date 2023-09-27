@@ -1,2 +1,2 @@
 ,params,score
-raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'n_kernels': 300, 'alpha': 3.4000000000000004}]",51.2822241355703
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'n_kernels': 400, 'alpha': 0.5}]",0.9984941216513892

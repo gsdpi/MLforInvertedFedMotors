@@ -2,7 +2,7 @@
 import numpy as np
 from featureExtraction import featureExtraction
 
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error,r2_score
 import ipdb
 import reservoirpy as rpy
 rpy.verbosity(0)  
@@ -10,6 +10,7 @@ rpy.set_seed(42)
 from reservoirpy.nodes import Reservoir
 from sklearn.linear_model import Ridge
 from numpy.lib.stride_tricks import sliding_window_view
+from sklearn.base import BaseEstimator
 
 class esn(object):
     def __init__(self,data: featureExtraction, params: dict, **kwargs) -> None:      
@@ -22,20 +23,15 @@ class esn(object):
         self.n_timesteps= self.X_train.shape[1]
         
         # Params: units, num. layers, 
-        self.scale_inputs   = params.get("scale_input",5)	
+        
         self.n_states       = params.get("n_states",300)
         self.rho            = params.get("rho",0.95)
         self.sparsity       = params.get("sparsity",0.01)
         self.lr             = params.get("lr",0.025)
         self.Win_scale      = params.get("Win_scale",150)
-        self.Wfb_scale      = params.get("Wfb_scale",0.)
         self.input_scale    = params.get("input_scale",5)
-        self.Washout        = params.get("Washout",0)
-        self.Warmup         = params.get("Washout",100)
+        self.Warmup         = params.get("Warmup",100)
         self.alpha          = params.get("alpha",0.01)
-        self.set_bias       = params.get("Washout",False)
-
-
         # List with all keras layers
         self.model = self.create_model()
 
@@ -98,46 +94,97 @@ class esn(object):
         return "esn"
 
     @classmethod
-    def get_randomSearch_params(cls,hp):
-        param_grid = {'hiddenLayerUnits':[hp.Int("neurons_l1", min_value=10, max_value=200, step=10),
-                                          hp.Int("neurons_l2", min_value=10, max_value=200, step=10),
-                                          hp.Int("neurons_l3", min_value=10, max_value=200, step=10)],
-                     'activation':        hp.Choice("activation", ["relu", "tanh","sigmoid"]),
-                     'initializer':       "glorot_uniform",
-                     'lr' :                hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log"),
-                     'beta' :              0.8,
-                     'epochs':             300,
-                     'batch_size':         hp.Int("batch_size", min_value=4, max_value=32, step=4),
-                     'n_layers':           hp.Choice("n_layers", [1,2,3])
-
+    def get_randomSearch_params(cls):
+        param_grid = {'input_scale':[5],
+                     'n_states':[100,300,500],
+                     'rho':np.arange(0.2,0.95,0.1).tolist(),
+                     'sparsity':[0.01,0.03,0.1,0.3],
+                     'lr':[0,0.01,0.03,0.1,0.3,0.6],
+                     'Win_scale':[150],
+                     "Warmup":[100],
+                     'alpha':[0.0001, 0.001,0.01,0.1,0.5]
                     }
-        
         return param_grid
     
     @classmethod
-    def get_model_obj(cls,data):
+    def get_model_obj(cls,data,params):
 
-        def build_model(hp):
-            params = cls.get_randomSearch_params(hp)
-            model  = cls(data,params).model
-            return model
+        class Wrapper(BaseEstimator):
+            
+            def __init__(self,data, input_scale, n_states, rho, sparsity, lr, Win_scale, Warmup,alpha):
+                self.data        = data 
+                self.input_scale = input_scale
+                self.n_states    = n_states    
+                self.rho         = rho
+                self.sparsity    = sparsity    
+                self.lr          = lr
+                self.Win_scale   = Win_scale    
+                self.Warmup      = Warmup
+                self.alpha       = alpha
+                
+                self.params = {'input_scale':self.input_scale,
+                                'n_states':self.n_states,
+                                'rho':self.rho,
+                                'sparsity':self.sparsity,
+                                'lr':self.lr,
+                                'Win_scale':self.Win_scale,
+                                "Warmup":self.Warmup,
+                                'alpha':self.alpha
+                                }
+                self.model = cls(self.data,self.params)
+            
+            def fit(self, X,y):
+                self.model.X_train = X
+                self.model.y_train = y[:,-1]
+                self.model.train()
+                return self
 
-        return build_model
-    @classmethod 
-    def get_params_from_hp(cls,best_hp):
-        params = {'hiddenLayerUnits':[best_hp["neurons_l1"],
-                                          best_hp["neurons_l2"],
-                                          best_hp["neurons_l3"]],
-                       'activation':      best_hp["activation"],
-                        'initializer':    "glorot_uniform",
-                        'lr' :            best_hp["lr"],
-                        'beta' :          0.8,
-                        'epochs':         300,
-                        'batch_size':     best_hp["batch_size"],
-                        'n_layers':       best_hp["n_layers"]
-                    }
+            def predict(self, X):
+                return self.model.predict(X)
+            
+            def score(self, X,y):
+                y = y[:,-1]
+                y_ = self.model.predict(X)
+                
+                return r2_score(y,y_)
 
-        return params
+            def get_params(self, deep=True):
+                
+                return {        'data':self.data,
+                                'input_scale':self.input_scale,
+                                'n_states':self.n_states,
+                                'rho':self.rho,
+                                'sparsity':self.sparsity,
+                                'lr':self.lr,
+                                'Win_scale':self.Win_scale,
+                                "Warmup":self.Warmup,
+                                'alpha':self.alpha
+                                }
+
+            def set_params(self, **params):
+                self.data        = params.get("data")
+                self.input_scale = params.get("input_scale")
+                self.n_states    = params.get("n_states")    
+                self.rho         = params.get("rho")
+                self.sparsity    = params.get("sparsity")    
+                self.lr          = params.get("lr")
+                self.Win_scale   = params.get("Win_scale")    
+                self.Warmup      = params.get("Warmup")
+                self.alpha       = params.get("alpha")
+
+                self.params = {'input_scale':self.input_scale,
+                                'n_states':self.n_states,
+                                'rho':self.rho,
+                                'sparsity':self.sparsity,
+                                'lr':self.lr,
+                                'Win_scale':self.Win_scale,
+                                "Warmup":self.Warmup,
+                                'alpha':self.alpha
+                                }                
+                self.model = cls(self.data,self.params)
+                return self
+       
+        return Wrapper(data, params["input_scale"], params["n_states"], params["rho"], params["sparsity"], params["lr"], params["Win_scale"], params["Warmup"],params["alpha"])
     
 
 # Unit testing

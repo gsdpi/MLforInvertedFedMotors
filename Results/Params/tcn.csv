@@ -1,2 +1,2 @@
 ,params,score
-raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'kernel_size': 15, 'n_kernels': 64, 'useSkips': 1, 'dropout_rate': 0.28588355302027946, 'lr': 0.00023296415902195254, 'beta': 0.8, 'epochs': 300, 'batch_size': 16}]","[5.803545951843262, 5.803545951843262, 1.6819381713867188]"
+raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27,"[{'kernel_size': 3, 'n_kernels': 32, 'useSkips': 0, 'dropout_rate': 0.020984294051830932, 'lr': 0.0009533968196927692, 'beta': 0.8, 'epochs': 300, 'batch_size': 16}]","[2.5590243339538574, 2.5590243339538574, 1.1466435194015503]"

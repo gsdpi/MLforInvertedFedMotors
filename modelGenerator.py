@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
 
     # Test time models
-    modelID = "seq2point"
+    modelID = "lstm"
     params = {}
     data = featureExtraction(dataID,featsDomain="time",statorFreqs=[37,35,33],testsID=[21,24],timesteps=800,Fm= 20000,Fm_target=2000)
     dataTest = featureExtraction(dataID,featsDomain="time",statorFreqs=[37,35,33],testsID=[24,27],timesteps=800,Fm= 20000,Fm_target=2000,scaler_params=data.get_scaler_params())  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27 

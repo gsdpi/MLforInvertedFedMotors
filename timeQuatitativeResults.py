@@ -1,5 +1,5 @@
 import copy
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold,StratifiedKFold
 from featureExtraction import featureExtraction
 from modelGenerator import modelGenerator
 from keras import backend as K 
@@ -8,7 +8,7 @@ from address import *
 N_splits = 5
 DataID = "raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27"
 modelsID = ["lstm","esn","tcn","seq2point","rocket"]
-data = featureExtraction(DataID,statorFreqs=[37],testsID=[21,24],featsDomain="time",timesteps=800,Fm=20000,Fm_target=2000)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
+data = featureExtraction(DataID,statorFreqs=[37],testsID=[21,24],featsDomain="time",timesteps=1100,testRatio=0.05)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
 
 METRICS = []
 
@@ -19,11 +19,12 @@ MODEL_LABELS = {"lstm": "LSTM",
                 "esn":"ESN"}
 
 for modelID in modelsID:
-    X =copy.deepcopy(data.X)
-    y =copy.deepcopy(data.y)
-
-    skf = KFold(n_splits=N_splits,shuffle=True)
-    for k, (train_index, test_index) in enumerate(skf.split(X, y)):
+    X =copy.deepcopy(data.X_train)
+    y =copy.deepcopy(data.y_train)
+    y_label = (y[:,-1]>120)*1
+   
+    skf = StratifiedKFold(n_splits=N_splits,shuffle=True)
+    for k, (train_index, test_index) in enumerate(skf.split(X, y_label)):
             data.X_train,data.y_train = X[train_index],y[train_index]
             data.X_test, data.y_test  = X[test_index],y[test_index]
             model = modelGenerator(modelID=modelID, data=data,params={})

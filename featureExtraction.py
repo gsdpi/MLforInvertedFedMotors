@@ -11,12 +11,13 @@ import numpy as np
 import os
 from utils import get_low_leakage_fft, get_peaks, estimate_fs_from_peaks
 from sklearn.model_selection import train_test_split
+from imblearn.over_sampling import RandomOverSampler
 from sklearn.preprocessing import MinMaxScaler
 from scipy import signal
 
 
 class featureExtraction(object):
-    def __init__(self, dataID:str,featsDomain: str='freq',statorFreqs:list=[37],testsID:list=[],timesteps:int=540,testRatio:float=0.2,random_state:int=14,scaler_params:dict={},Fm:int=20000,Fm_target:int =20000)->None:
+    def __init__(self, dataID:str,featsDomain: str='freq',statorFreqs:list=[37],testsID:list=[],timesteps:int=540,testRatio:float=0.2,random_state:int=14,scaler_params:dict={},Fm:int=20000,Fm_target:int =20000,balance:bool=True)->None:
         '''
             PARAMS:
                 dataID (str)          String ID of the .h5 file to be processed.
@@ -33,6 +34,7 @@ class featureExtraction(object):
         self.featsDomain = featsDomain
         self.Fm = Fm
         self.Fm_target = Fm_target
+        self.balance = balance
         
         with h5py.File(self.DATAPATH, 'r') as hf:
             self.data = hf['datos'][:]
@@ -47,12 +49,14 @@ class featureExtraction(object):
         if featsDomain=="freq":
             self.M,self.X = self.get_freq_feats()
             self.y = self.M[:,3]
+            self.y_label = (self.y >120)
             axis_scaler = 0
 
         
         elif featsDomain=="time":
             self.M,self.X = self.get_time_feats()
             self.y = self.M[:,3]
+            self.y_label = (self.y >120)
             self.y = np.tile(self.y,(self.X.shape[1],1)).T
             axis_scaler = (0,1)
 
@@ -64,12 +68,32 @@ class featureExtraction(object):
             self.scaler_params = scaler_params
 
         self.X = (self.X - self.scaler_params[0])/(self.scaler_params[1]-self.scaler_params[0])
-        self.X_train,self.X_test,self.y_train,self.y_test,self.M_train,self.M_test = train_test_split(self.X,self.y,self.M,
+        self.X_train,self.X_test,self.y_train,self.y_test,self.M_train,self.M_test,self.y_label_train,y_label_test = train_test_split(self.X,self.y,self.M,self.y_label,
                                                                                                       test_size=self.testRatio,
                                                                                                        random_state=random_state)
 
-    def get_scaler_params(self):
+        # Balancing training data oversampling minority temps
+        if self.balance:
+           
+            idx_extra_samples = self.oversampling_idx_temp()
+            self.X_train = np.vstack([self.X_train,self.X_train[idx_extra_samples,...]])
+            self.y_train = np.concatenate([self.y_train,self.y_train[idx_extra_samples,...]],axis=0)
+
+    def get_scaler_params(self):    
         return self.scaler_params
+
+    def oversampling_idx_temp(self):
+        classes, counts = np.unique(self.y_label_train,return_counts=True)
+        Nmax    = np.max(counts)
+        idx_max = np.argmax(counts)
+        oversampled_idx = []
+        for ii,cls in enumerate(classes):
+            if not cls == classes[idx_max]:
+                N = counts[ii]
+                idx_minority = np.argwhere(self.y_label_train== cls)[:,0]
+                oversampled_idx.append(np.random.choice(idx_minority,Nmax-N))
+        oversampled_idx = np.concatenate(oversampled_idx,axis=0)
+        return oversampled_idx
 
     def get_freq_feats(self):
         M = []
@@ -137,7 +161,7 @@ class featureExtraction(object):
                 i_ab = i_ab[idx:idx+self.timesteps]
                 i_a  = i_a[idx:idx+self.timesteps]          
                 #X.append(np.vstack([np.abs(u_ab),np.angle(u_ab),np.abs(i_ab),np.angle(i_ab)]).T)
-                X.append(np.vstack([np.real(u_ab),np.imag(u_ab),np.real(i_ab),np.imag(i_ab),i_a]).T)
+                X.append(np.vstack([np.real(u_ab),np.imag(u_ab),np.real(i_ab),np.imag(i_ab)]).T)
                 M.append([Fs_est, Fs, Fr, Temp])
 
         M = np.array(M)            
@@ -178,7 +202,12 @@ if __name__ == "__main__":
     # plt.figure('y')
     # plt.plot(data.y)
 
+    # plt.figure("hist tep")
+    # plt.clf()
+    # plt.hist((data.y_train>120)*1)
+
     # # Time test
+
 
     data = featureExtraction(dataID,featsDomain="time",statorFreqs=[37],testsID=[24,27],timesteps=800,Fm= 20000,Fm_target=2000)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27 
 
@@ -239,3 +268,7 @@ if __name__ == "__main__":
         plt.subplot(2,2,2)
         plt.plot(data.X[i,:,2],label=f"{data.y[i,-1]}",color=plt.cm.PuRd(temps[ii]),alpha=0.5)
         plt.title("Corriente i_alpha")
+
+    plt.figure("hist tep")
+    plt.clf()
+    plt.hist((data.y_train[:,-1]>120)*1)

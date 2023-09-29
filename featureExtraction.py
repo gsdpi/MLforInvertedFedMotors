@@ -17,7 +17,7 @@ from scipy import signal
 
 
 class featureExtraction(object):
-    def __init__(self, dataID:str,featsDomain: str='freq',statorFreqs:list=[37],testsID:list=[],timesteps:int=540,testRatio:float=0.2,random_state:int=14,scaler_params:dict={},Fm:int=20000,Fm_target:int =20000,balance:bool=True)->None:
+    def __init__(self, dataID:str,featsDomain: str='freq',statorFreqs:list=[37],testsID:list=[],timesteps:int=540,testRatio:float=0.2,random_state:int=14,scaler_params:dict={},Fm:int=20000,Fm_target:int =2000,balance:bool=True)->None:
         '''
             PARAMS:
                 dataID (str)          String ID of the .h5 file to be processed.

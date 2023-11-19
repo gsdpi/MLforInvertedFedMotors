@@ -8,7 +8,7 @@ from address import *
 N_splits = 5
 DataID = "raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27"
 modelsID = ["lstm","esn","tcn","seq2point","rocket"]
-data = featureExtraction(DataID,statorFreqs=[37],testsID=[21,24],featsDomain="time",timesteps=1100,testRatio=0.05)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
+data = featureExtraction(DataID,statorFreqs=[37],testsID=[21,24],featsDomain="time",timesteps=800,Fm= 20000, Fm_target=2000,testRatio=0.05)  # raw_data_10000_samples_fm_20000_tests_Prueba_21_Prueba_24_Prueba_27
 
 METRICS = []
 
